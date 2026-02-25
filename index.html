@@ -336,15 +336,15 @@
                             </div>
                         </div>
                     </div>
-                    <form class="quote-form">
+                    <form class="quote-form" id="inquiry-form">
                         <div class="form-group">
-                            <input type="text" placeholder="Full Name" required>
+                            <input type="text" id="form-name" placeholder="Full Name" required>
                         </div>
                         <div class="form-group">
-                            <input type="text" placeholder="Company Name" required>
+                            <input type="text" id="form-company" placeholder="Company Name" required>
                         </div>
                         <div class="form-group">
-                            <select required>
+                            <select id="form-interest" required>
                                 <option value="" disabled selected>Product Interest</option>
                                 <option>Valves & Pipes</option>
                                 <option>Pneumatics & Hydraulics</option>
@@ -354,7 +354,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <textarea placeholder="Message / Requirements" rows="4" required></textarea>
+                            <textarea id="form-message" placeholder="Message / Requirements" rows="4"
+                                required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Get a Free Quote</button>
                     </form>
