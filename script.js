@@ -19,11 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', revealOnScroll);
     revealOnScroll(); // Trigger once on load
 
-    // Mobile Menu (Simple placeholder logic)
+    // Mobile Menu Toggle
     const mobileToggle = document.querySelector('.mobile-toggle');
-    if (mobileToggle) {
+    const navLinks = document.querySelector('.nav-links');
+    const navLinksArray = document.querySelectorAll('.nav-links a');
+
+    if (mobileToggle && navLinks) {
         mobileToggle.addEventListener('click', () => {
-            alert('Mobile menu navigation would expand here in a production build.');
+            navLinks.classList.toggle('active');
+            const icon = mobileToggle.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.setAttribute('data-lucide', 'x');
+            } else {
+                icon.setAttribute('data-lucide', 'menu');
+            }
+            lucide.createIcons();
+        });
+
+        // Close menu on link click
+        navLinksArray.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                const icon = mobileToggle.querySelector('i');
+                icon.setAttribute('data-lucide', 'menu');
+                lucide.createIcons();
+            });
         });
     }
 
