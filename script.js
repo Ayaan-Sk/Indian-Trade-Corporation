@@ -114,4 +114,198 @@ document.addEventListener('DOMContentLoaded', () => {
             navbar.style.background = 'rgba(10, 12, 16, 0.95)';
         }
     });
+
+    // --- Chatbot Logic ---
+    const chatBubble = document.getElementById('chat-bubble');
+    const chatWindow = document.getElementById('chat-window');
+    const chatClose = document.getElementById('chat-close');
+    const chatBody = document.getElementById('chat-body');
+    const chatOptions = document.getElementById('chat-options');
+
+    let chatState = {
+        step: 'greeting',
+        data: {}
+    };
+
+    const productOptions = [
+        "Valves", "Pipes", "Pneumatics", "Hydraulics", "Instrumentation", "Other Product"
+    ];
+
+    const valveTypes = ["Ball Valve", "Gate Valve", "Butterfly Valve", "Other"];
+
+    if (chatBubble && chatWindow && chatClose) {
+        chatBubble.addEventListener('click', () => {
+            chatWindow.classList.toggle('active');
+            if (chatWindow.classList.contains('active')) {
+                resetChat();
+            }
+        });
+
+        chatClose.addEventListener('click', () => {
+            chatWindow.classList.remove('active');
+        });
+    }
+
+    function addMessage(text, sender = 'bot') {
+        const msg = document.createElement('div');
+        msg.className = `chat-message ${sender}`;
+        msg.innerHTML = `<p>${text}</p>`;
+        chatBody.appendChild(msg);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showOptions(options) {
+        chatOptions.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleOption(opt);
+            chatOptions.appendChild(btn);
+        });
+    }
+
+    function resetChat() {
+        // Clear only the messages, keep the chat-options container
+        const messages = chatBody.querySelectorAll('.chat-message');
+        messages.forEach(m => m.remove());
+
+        addMessage("Welcome to Indian Traders Corporation.");
+        addMessage("How may we assist you today?");
+
+        chatState = { step: 'greeting', data: {} };
+        showOptions(productOptions);
+    }
+
+    function handleOption(option) {
+        addMessage(option, 'user');
+        chatOptions.innerHTML = '';
+
+        if (chatState.step === 'greeting') {
+            chatState.data.product = option;
+            if (option === 'Valves') {
+                chatState.step = 'valve_type';
+                setTimeout(() => {
+                    addMessage("Please select type of valve:");
+                    showOptions(valveTypes);
+                }, 500);
+            } else {
+                chatState.step = 'specification';
+                setTimeout(() => {
+                    addMessage(`Great Choice! Kindly mention size / pressure rating for ${option} (if known).`);
+                    showInput();
+                }, 500);
+            }
+        } else if (chatState.step === 'valve_type') {
+            chatState.data.valveType = option;
+            chatState.step = 'specification';
+            setTimeout(() => {
+                addMessage("Kindly mention size / pressure rating (if known).");
+                showInput();
+            }, 500);
+        }
+    }
+
+    function showInput() {
+        const inputWrapper = document.createElement('div');
+        inputWrapper.className = 'chat-input-wrapper active';
+        inputWrapper.innerHTML = `<input type="text" class="chat-input" placeholder="Type here..." id="temp-input">`;
+        chatBody.appendChild(inputWrapper);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        const input = document.getElementById('temp-input');
+        input.focus();
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter' && input.value.trim() !== "") {
+                const val = input.value.trim();
+                handleInput(val);
+                inputWrapper.remove();
+            }
+        };
+    }
+
+    function handleInput(value) {
+        addMessage(value, 'user');
+
+        if (chatState.step === 'specification') {
+            chatState.data.specs = value;
+            chatState.step = 'quantity';
+            setTimeout(() => addMessage("Required quantity?"), 500);
+            setTimeout(() => showInput(), 600);
+        } else if (chatState.step === 'quantity') {
+            chatState.data.quantity = value;
+            chatState.step = 'company';
+            setTimeout(() => addMessage("Your company name?"), 500);
+            setTimeout(() => showInput(), 600);
+        } else if (chatState.step === 'company') {
+            chatState.data.company = value;
+            chatState.step = 'contact';
+            setTimeout(() => addMessage("Contact number?"), 500);
+            setTimeout(() => showInput(), 600);
+        } else if (chatState.step === 'contact') {
+            chatState.data.contact = value;
+            chatState.step = 'email';
+            setTimeout(() => addMessage("Email (optional). Type 'N/A' to skip."), 500);
+            setTimeout(() => showInput(), 600);
+        } else if (chatState.step === 'email') {
+            chatState.data.email = value;
+            finishEnquiry();
+        }
+    }
+
+    function finishEnquiry() {
+        setTimeout(() => {
+            addMessage("Thank you. Our sales team will contact you shortly.");
+            sendNotifications(chatState.data);
+        }, 500);
+    }
+
+    function sendNotifications(data) {
+        console.log("Enquiry captured:", data);
+
+        // 1. WhatsApp Notification
+        const whatsappNumber = "919359194023";
+        const text = `*Chatbot Enquiry - ITC*%0A%0A` +
+            `*Product:* ${data.product}%0A` +
+            (data.valveType ? `*Type:* ${data.valveType}%0A` : "") +
+            `*Specs:* ${data.specs}%0A` +
+            `*Qty:* ${data.quantity}%0A` +
+            `*Company:* ${data.company}%0A` +
+            `*Contact:* ${data.contact}%0A` +
+            `*Email:* ${data.email}`;
+
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${text}`;
+
+        // 2. Email (mailto) fallback
+        const mailtoUrl = `mailto:info@itcnagpur.com?subject=New Chatbot Enquiry&body=Product: ${data.product}%0ACompany: ${data.company}%0AContact: ${data.contact}`;
+
+        // 3. Google Sheets Integration (Placeholder)
+        // To use this, create a Google Apps Script and deploy as Web App
+        const scriptUrl = ""; // Add your Web App URL here
+        if (scriptUrl) {
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => console.log("Data sent to Google Sheets"))
+                .catch(err => console.error("Error sending to Google Sheets:", err));
+        }
+
+        // Add a button to manually trigger WhatsApp/Email if auto-open is blocked
+        const actionDiv = document.createElement('div');
+        actionDiv.className = 'chat-options';
+        actionDiv.innerHTML = `
+            <button class="option-btn" onclick="window.open('${whatsappUrl}', '_blank')">Send to WhatsApp</button>
+            <button class="option-btn" onclick="window.location.href='${mailtoUrl}'">Send via Email</button>
+        `;
+        chatBody.appendChild(actionDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        // Optional: Auto-open WhatsApp after 2 seconds
+        setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+        }, 2000);
+    }
 });
